@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数独 - 無料ナンプレゲーム</title>
+<meta name="description" content="無料で遊べる数独（ナンプレ）ゲーム。かんたん・ふつう・むずかしいの3段階難易度。毎回違う問題が生成されます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf7;
+    --surface2: #f0ebe0;
+    --ink: #2a2018;
+    --ink2: #6b5e4e;
+    --ink3: #a0917f;
+    --accent: #8b4513;
+    --accent2: #c4622d;
+    --blue: #2c5f8a;
+    --blue-light: #dce8f5;
+    --red: #c0392b;
+    --green: #1a6b3c;
+    --border: #c8bfaf;
+    --border-dark: #8b7d6b;
+    --gold: #c9963a;
+    --shadow: 0 2px 12px rgba(42,32,24,0.12);
+    --shadow-lg: 0 8px 32px rgba(42,32,24,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(201,150,58,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 90%, rgba(139,69,19,0.06) 0%, transparent 60%);
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ===== AD SPACES ===== */
+  .ad-top {
+    width: 100%;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+    padding: 8px;
+  }
+  .ad-top-inner {
+    width: 728px;
+    max-width: 100%;
+    height: 90px;
+    background: #e8e0d0;
+    border: 1px dashed var(--border-dark);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--ink3);
+    font-family: monospace;
+  }
+
+  .wrapper {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .site-header::before {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: var(--gold);
+    margin: 0 auto 12px;
+  }
+  .site-header h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 8px;
+    line-height: 1;
+  }
+  .site-header .subtitle {
+    font-size: 13px;
+    color: var(--ink2);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+  .site-header::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: var(--gold);
+    margin: 12px auto 0;
+  }
+
+  /* ===== LEVEL BUTTONS ===== */
+  .level-bar {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .level-btn {
+    padding: 7px 20px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    border: 1px solid var(--border-dark);
+    border-radius: 2px;
+    background: var(--surface);
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .level-btn:hover { background: var(--surface2); color: var(--ink); }
+  .level-btn.active {
+    background: var(--accent);
+    color: #fff8f0;
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .new-btn {
+    padding: 7px 20px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    border: 1px solid var(--green);
+    border-radius: 2px;
+    background: var(--green);
+    color: #e8f5ee;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .new-btn:hover { background: #155530; }
+
+  /* ===== STATS ===== */
+  .stats {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 18px;
+    text-align: center;
+    min-width: 80px;
+    box-shadow: var(--shadow);
+  }
+  .stat-label { font-size: 10px; color: var(--ink3); letter-spacing: 1px; text-transform: uppercase; }
+  .stat-val { font-size: 22px; font-weight: 500; color: var(--ink); font-family: 'Noto Serif JP', serif; }
+
+  /* ===== MESSAGE ===== */
+  .msg {
+    text-align: center;
+    font-size: 14px;
+    min-height: 22px;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--green);
+    letter-spacing: 1px;
+  }
+
+  /* ===== BOARD ===== */
+  .board-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+  }
+  table {
+    border-collapse: collapse;
+    border: 2.5px solid var(--ink);
+    box-shadow: var(--shadow-lg);
+    background: var(--surface);
+  }
+  td {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 22px;
+    cursor: pointer;
+    border: 0.5px solid var(--border);
+    position: relative;
+    transition: background 0.08s;
+    user-select: none;
+    font-family: 'Noto Serif JP', serif;
+  }
+  td.given { color: var(--ink); font-weight: 600; }
+  td.user { color: var(--blue); font-weight: 400; }
+  td.error { color: var(--red) !important; }
+  td.selected { background: #dce8f5 !important; }
+  td.highlight { background: #f0ebe0; }
+  td.same-num { background: #cfe0f0 !important; }
+  td.border-r { border-right: 2px solid var(--ink) !important; }
+  td.border-b { border-bottom: 2px solid var(--ink) !important; }
+
+  /* ===== NUMPAD ===== */
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 5px;
+    max-width: 450px;
+    margin: 0 auto 0.75rem;
+  }
+  .num-btn {
+    height: 44px;
+    font-size: 20px;
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: 'Noto Serif JP', serif;
+    transition: all 0.1s;
+    box-shadow: 0 2px 4px rgba(42,32,24,0.1);
+  }
+  .num-btn:hover { background: var(--surface2); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(42,32,24,0.15); }
+  .num-btn:active { transform: translateY(0); }
+
+  /* ===== ACTION BUTTONS ===== */
+  .actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .action-btn {
+    padding: 8px 18px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    border: 1px solid var(--border-dark);
+    border-radius: 2px;
+    background: var(--surface);
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .action-btn:hover { background: var(--surface2); color: var(--ink); }
+
+  /* ===== AD BOTTOM ===== */
+  .ad-mid {
+    background: var(--surface2);
+    border: 1px dashed var(--border-dark);
+    border-radius: 4px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--ink3);
+    margin-bottom: 1rem;
+    font-family: monospace;
+  }
+
+  /* ===== HOW TO PLAY ===== */
+  .how-to {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .how-to h2 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .how-to ul {
+    list-style: none;
+    font-size: 13px;
+    color: var(--ink2);
+    line-height: 1.9;
+  }
+  .how-to ul li::before { content: '・'; color: var(--gold); }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink3);
+    padding-bottom: 1.5rem;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    td { width: 38px; height: 38px; font-size: 17px; }
+    .num-btn { height: 38px; font-size: 17px; }
+    .site-header h1 { font-size: 28px; }
+    .stat-box { padding: 6px 12px; min-width: 68px; }
+    .stat-val { font-size: 18px; }
+  }
+  @media (max-width: 360px) {
+    td { width: 34px; height: 34px; font-size: 15px; }
+  }
+</style>
+
+<!-- ===== Google AdSense head tag (replace with your own) =====
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+============================================================ -->
+</head>
+<body>
+
+<!-- TOP BANNER AD (728x90 PC / 320x50 Mobile) -->
+<div class="ad-top">
+  <div class="ad-top-inner">
+    【広告スペース】 728×90 — ここに AdSense コードを貼ってください
+    <!--
+    <ins class="adsbygoogle"
+         style="display:inline-block;width:728px;height:90px"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    -->
+  </div>
+</div>
+
+<div class="wrapper">
+
+  <header class="site-header">
+    <h1>数 独</h1>
+    <p class="subtitle">1〜9を各行・列・3×3ブロックに重複なく入れよう</p>
+  </header>
+
+  <div class="level-bar">
+    <button class="level-btn" id="btn-easy" onclick="setLevel('easy')">かんたん</button>
+    <button class="level-btn active" id="btn-normal" onclick="setLevel('normal')">ふつう</button>
+    <button class="level-btn" id="btn-hard" onclick="setLevel('hard')">むずかしい</button>
+    <button class="new-btn" onclick="newGame()">新しい問題</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-box"><div class="stat-label">タイム</div><div class="stat-val" id="timer">00:00</div></div>
+    <div class="stat-box"><div class="stat-label">ミス</div><div class="stat-val" id="mistakes">0</div></div>
+    <div class="stat-box"><div class="stat-label">ヒント</div><div class="stat-val" id="hints">3</div></div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="board-wrap"><table id="board"></table></div>
+
+  <div class="numpad" id="numpad"></div>
+
+  <div class="actions">
+    <button class="action-btn" onclick="eraseCell()">✕ 消す</button>
+    <button class="action-btn" onclick="useHint()">💡 ヒント</button>
+    <button class="action-btn" onclick="checkBoard()">✅ 確認</button>
+  </div>
+
+  <!-- MID RECTANGLE AD (300x250) — 高クリック率スポット -->
+  <div class="ad-mid">
+    【広告スペース】 300×250 (レクタングル) — ここに AdSense コードを貼ってください
+    <!--
+    <ins class="adsbygoogle"
+         style="display:block;width:300px;height:250px"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    -->
+  </div>
+
+  <div class="how-to">
+    <h2>遊び方</h2>
+    <ul>
+      <li>マスをクリックして選択し、下の数字ボタンを押して入力</li>
+      <li>キーボードの数字キー・矢印キーでも操作できます</li>
+      <li>各行・各列・各3×3ブロックに1〜9を一つずつ入れてください</li>
+      <li>青い数字が自分で入力した数字。赤は間違いです</li>
+      <li>ヒントは1ゲームにつき3回まで使えます</li>
+    </ul>
+  </div>
+
+  <footer class="footer">
+    &copy; 2025 数独ゲーム — 無料ブラウザゲーム
+  </footer>
+
+</div>
+
+<script>
+let puzzle=[], solution=[], userInput=[], selected=null;
+let level='normal', mistakes=0, hints=3, timerVal=0, timerInterval=null, running=false;
+
+const GIVEN={easy:46,normal:36,hard:26};
+
+function solveSudoku(b){
+  const e=findEmpty(b); if(!e)return true;
+  const[r,c]=e;
+  for(let n=1;n<=9;n++){if(isValid(b,r,c,n)){b[r][c]=n;if(solveSudoku(b))return true;b[r][c]=0;}}
+  return false;
+}
+function findEmpty(b){for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(!b[r][c])return[r,c];return null;}
+function isValid(b,r,c,n){
+  for(let i=0;i<9;i++)if(b[r][i]===n||b[i][c]===n)return false;
+  const br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(b[br+i][bc+j]===n)return false;
+  return true;
+}
+function generatePuzzle(givens){
+  let base=Array.from({length:9},()=>Array(9).fill(0));
+  for(let b=0;b<9;b+=3){
+    let nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+    let r=Math.floor(b/3)*3,c=(b%3)*3;
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)base[r+i][c+j]=nums[i*3+j];
+  }
+  solveSudoku(base);
+  let sol=base.map(r=>[...r]);
+  let cells=[];
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++)cells.push([r,c]);
+  cells.sort(()=>Math.random()-0.5);
+  let puz=sol.map(r=>[...r]);
+  for(let i=0;i<81-givens;i++){let[r,c]=cells[i];puz[r][c]=0;}
+  return{puzzle:puz,solution:sol};
+}
+function setLevel(l){
+  level=l;
+  ['easy','normal','hard'].forEach(x=>document.getElementById('btn-'+x).classList.remove('active'));
+  document.getElementById('btn-'+l).classList.add('active');
+  newGame();
+}
+function newGame(){
+  clearInterval(timerInterval);
+  timerVal=0;mistakes=0;hints=3;
+  document.getElementById('timer').textContent='00:00';
+  document.getElementById('mistakes').textContent='0';
+  document.getElementById('hints').textContent='3';
+  document.getElementById('msg').textContent='';
+  const gen=generatePuzzle(GIVEN[level]);
+  puzzle=gen.puzzle;solution=gen.solution;
+  userInput=puzzle.map(r=>[...r]);
+  selected=null;
+  renderBoard();
+  running=true;
+  timerInterval=setInterval(()=>{
+    if(!running)return;
+    timerVal++;
+    let m=String(Math.floor(timerVal/60)).padStart(2,'0');
+    let s=String(timerVal%60).padStart(2,'0');
+    document.getElementById('timer').textContent=m+':'+s;
+  },1000);
+}
+function renderBoard(){
+  const table=document.getElementById('board');
+  table.innerHTML='';
+  for(let r=0;r<9;r++){
+    const tr=document.createElement('tr');
+    for(let c=0;c<9;c++){
+      const td=document.createElement('td');
+      if((c+1)%3===0&&c<8)td.classList.add('border-r');
+      if((r+1)%3===0&&r<8)td.classList.add('border-b');
+      if(puzzle[r][c]){td.textContent=puzzle[r][c];td.classList.add('given');}
+      else if(userInput[r][c]){
+        td.textContent=userInput[r][c];
+        td.classList.add('user');
+        if(userInput[r][c]!==solution[r][c])td.classList.add('error');
+      }
+      if(selected){
+        const[sr,sc]=selected;
+        if(r===sr&&c===sc){td.classList.add('selected');}
+        else if(r===sr||c===sc||(Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3)))td.classList.add('highlight');
+        const selNum=userInput[sr][sc];
+        if(selNum&&userInput[r][c]===selNum&&!(r===sr&&c===sc))td.classList.add('same-num');
+      }
+      td.onclick=()=>selectCell(r,c);
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+  renderNumpad();
+}
+function renderNumpad(){
+  const np=document.getElementById('numpad');
+  np.innerHTML='';
+  for(let n=1;n<=9;n++){
+    const btn=document.createElement('button');
+    btn.className='num-btn';btn.textContent=n;
+    btn.onclick=()=>enterNum(n);
+    np.appendChild(btn);
+  }
+}
+function selectCell(r,c){selected=[r,c];renderBoard();}
+function enterNum(n){
+  if(!selected)return;
+  const[r,c]=selected;
+  if(puzzle[r][c])return;
+  userInput[r][c]=n;
+  if(n!==solution[r][c]){mistakes++;document.getElementById('mistakes').textContent=mistakes;}
+  renderBoard();checkWin();
+}
+function eraseCell(){
+  if(!selected)return;
+  const[r,c]=selected;
+  if(puzzle[r][c])return;
+  userInput[r][c]=0;renderBoard();
+}
+function checkWin(){
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(userInput[r][c]!==solution[r][c])return;
+  running=false;clearInterval(timerInterval);
+  const m=document.getElementById('timer').textContent;
+  document.getElementById('msg').textContent='🎉 おめでとうございます！クリア！タイム：'+m;
+}
+function checkBoard(){
+  let ok=true;
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(!puzzle[r][c]&&userInput[r][c]&&userInput[r][c]!==solution[r][c])ok=false;
+  const empties=[];for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(!userInput[r][c])empties.push(1);
+  document.getElementById('msg').textContent=ok?'✅ 今のところ正解です！':'❌ 間違いがあります。赤い数字を確認してください';
+  setTimeout(()=>document.getElementById('msg').textContent='',3000);
+}
+function useHint(){
+  if(hints<=0){document.getElementById('msg').textContent='ヒントは使い切りました';setTimeout(()=>document.getElementById('msg').textContent='',2000);return;}
+  let empties=[];
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(!puzzle[r][c]&&userInput[r][c]!==solution[r][c])empties.push([r,c]);
+  if(!empties.length)return;
+  const[r,c]=empties[Math.floor(Math.random()*empties.length)];
+  userInput[r][c]=solution[r][c];
+  hints--;document.getElementById('hints').textContent=hints;
+  renderBoard();checkWin();
+}
+document.addEventListener('keydown',e=>{
+  if(!selected)return;
+  const[r,c]=selected;
+  if(e.key>='1'&&e.key<='9')enterNum(parseInt(e.key));
+  if(e.key==='Backspace'||e.key==='Delete')eraseCell();
+  const moves={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+  if(moves[e.key]){e.preventDefault();const[dr,dc]=moves[e.key];const nr=r+dr,nc=c+dc;if(nr>=0&&nr<9&&nc>=0&&nc<9){selected=[nr,nc];renderBoard();}}
+});
+newGame();
+</script>
+</body>
+</html>
